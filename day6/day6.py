@@ -1,72 +1,59 @@
 
-def printfield(field):
-    for x in field:
-        for y in x:
-            print(y, end=" ")
-        print("")
-
 def distance(point1, point2):
     return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
-input = open("test.txt").read().splitlines()
-#input = open("input.txt").read().splitlines()
-size = 1000
 
-data = []
-for point in input:
-    temp = point.split(", ")
-    data.append((int(temp[0]), int(temp[1])))
+if __name__ == "__main__":
+    # input = open("test.txt").read().splitlines()
+    input = open("input.txt").read().splitlines()
+    size = 400
+    treshold = 10000
 
-print(data)
+    data = []
+    for point in input:
+        temp = point.split(", ")
+        data.append((int(temp[0]), int(temp[1])))
 
-field = [[-1 for x in range(size)] for y in range(size)]
+    field = [[-1 for x in range(size)] for y in range(size)]
+    exclude = set()
 
-for x in range(size):
-    for y in range(size):
+    for x in range(size):
+        for y in range(size):
+            dists = []
 
-        min_dist = 100000
-        second_dist = 1000000
-        closest = -1
-        second = -1
+            for nr, point in enumerate(data):
+                dist = distance((x, y), point)
+                dists.append((nr, dist))
 
-        for point in data:
-            dist = distance((x, y), point)
-            if dist < min_dist:
-                second_dist = min_dist
-                second = closest
+            dists.sort(key=lambda a: a[1])
+            if dists[0][1] != dists[1][1]:
+                field[y][x] = dists[0][0]
 
-                min_dist = dist
-                closest = data.index(point)
+            if (x == 0 or x == size -1) or (y == 0 or y == size-1):
+                exclude.add(field[y][x])
 
-            elif dist == min_dist:
-                closest = -1
+    biggest = 0
+    for number in [x for x in range(len(data)) if x not in exclude]:
+        sum = 0
+        for row in field:
+            sum += row.count(number)
 
-            elif dist < second_dist:
-                second_dist = dist
-                second = data.index(point)
+        if sum > biggest:
+            biggest = sum
 
-        field[y][x] = closest
+    print("Part1: {}".format(biggest))
 
-#printfield(field)
+    # Part 2
+    area = 0
+    for x in range(size):
+        for y in range(size):
+            dist_sum = 0
 
-exclude = set()
-for x in range(size):
-    for y in range(size):
-        if (x == 0 or x == size -1) and (y == 0 or y == size-1):
-            exclude.add(field[y][x])
+            for point in data:
+                dist = distance((x, y), point)
+                dist_sum += dist
 
-print(exclude)
-loop = [x for x in range(len(data)) if x not in exclude]
-print(loop)
+            if dist_sum < treshold:
+                area += 1
 
-biggest = 0
-for number in loop:
-    sum = 0
-    for row in field:
-        sum += row.count(number)
-
-    if sum > biggest:
-        biggest = sum
-
-print(biggest)
-
+    print("Part2: {}".format(area))
