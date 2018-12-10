@@ -1,6 +1,7 @@
 import re
 import copy
 
+
 class Point:
     def __init__(self, values):
         self.x = int(values[0])
@@ -30,25 +31,7 @@ def draw_points(points, w, h, big_min):
     return field
 
 
-expr = "position=< *(-?\d+), *(-?\d+)> velocity=< *(-?\d+), *(-?\d+)>"
-
-#input = open("test.txt").read().splitlines()
-input = open("input.txt").read().splitlines()
-
-width = 25
-heigth = 16
-
-points = []
-for line in input:
-    m = re.match(expr, line)
-    if m:
-        points.append(Point(m.groups()))
-
-smallest = [10000, 10000]
-smallest_points = []
-smallest_i = 0
-
-for x in range(15000):
+def find_range(points):
     big_pos = [0, 0]
     big_neg = [0, 0]
 
@@ -65,41 +48,50 @@ for x in range(15000):
         if point.y < big_neg[1]:
             big_neg[1] = point.y
 
-    #print("Second {}".format(x))
     width = big_pos[0] + abs(big_neg[0]) + 1
     heigth = big_pos[1] + abs(big_neg[1]) + 1
 
-    if width < smallest[0] or heigth < smallest[1]:
-        smallest = [width, heigth]
-        smallest_i = x
-        smallest_points = copy.deepcopy(points)
-        #field = draw_points(points, width, heigth, big_neg)
-        #smallest_field = field
-
-    for point in points:
-        point.move()
+    return width, heigth, big_neg
 
 
-print("smallest field")
-print(smallest)
-print(smallest_i)
+if __name__ == "__main__":
+    expr = "position=< *(-?\d+), *(-?\d+)> velocity=< *(-?\d+), *(-?\d+)>"
 
-big_pos = [0, 0]
-big_neg = [0, 0]
-for point in smallest_points:
-    if point.x > big_pos[0]:
-        big_pos[0] = point.x
+    #input = open("test.txt").read().splitlines()
+    input = open("input.txt").read().splitlines()
 
-    if point.x < big_neg[0]:
-        big_neg[0] = point.x
+    # Parse points
+    points = []
+    for line in input:
+        m = re.match(expr, line)
+        if m:
+            points.append(Point(m.groups()))
 
-    if point.y > big_pos[1]:
-        big_pos[1] = point.y
+    smallest = {
+        'i': 0,
+        'points': [],
+        'width': 10000,
+        'height': 10000,
+    }
 
-    if point.y < big_neg[1]:
-        big_neg[1] = point.y
+    for x in range(15000):
+        width, heigth, _ = find_range(points)
 
-width = big_pos[0] + abs(big_neg[0]) + 1
-heigth = big_pos[1] + abs(big_neg[1]) + 1
-draw_points(smallest_points, width, heigth, big_neg)
-#print_field(smallest_field)
+        # This iteration gives the smallest result
+        if width < smallest['width'] or heigth < smallest['height']:
+            smallest.update({
+                'width': width,
+                'height': heigth,
+                'i': x,
+                'points': copy.deepcopy(points)
+            })
+
+        # Move all points
+        for point in points:
+            point.move()
+
+    print("smallest field")
+    print("After {} seconds".format(smallest['i']))
+
+    width, heigth, neg = find_range(smallest['points'])
+    draw_points(smallest['points'], width, heigth, neg)
